@@ -42,6 +42,14 @@ Subclass of `http.server.BaseHTTPRequestHandler` served by `ThreadingHTTPServer`
 | POST   | `/buzz`  | `{"name": "..."}` → register buzz |
 | POST   | `/reset` | Clear winner                   |
 
+**Transport tuning — do not revert these three settings.** They were chosen from measurement, and each one is load-bearing:
+
+- `QuizHandler.protocol_version = "HTTP/1.1"` — without keep-alive, every poll needs a fresh TCP connection and all clients reconnect simultaneously after each state change.
+- `QuizHandler.disable_nagle_algorithm = True` — **required whenever keep-alive is on.** `_send_json()` writes headers and body separately (`wbufsize` is 0), so Nagle holds the body until the peer ACKs the headers, adding ~40 ms to *every* response. Enabling HTTP/1.1 without this makes the app ~20× slower than the original HTTP/1.0 code.
+- `QuizServer.request_queue_size = 128` — the stdlib default of 5 drops the excess SYNs when more than a handful of players connect at once, stalling those clients ~1 s on the TCP SYN retransmit.
+
+Measured delivery latency (buzz commit → other clients receive it, 8 clients, loopback): median 2.2 ms, p95 5.2 ms. Before the tuning: median 2.4 ms but p95 722 ms. An SSE rewrite measured 2.2 ms / 4.0 ms — i.e. no meaningful gain over the tuned long-polling, so long-polling was kept.
+
 ### 4. Embedded HTML/JS (`HTML` string)
 
 A single-page app inlined as a Python string. The JS polling loop starts with a `GET /state` snapshot, then enters an infinite `poll()` loop. `applyState(data)` handles all UI rendering. The buzzer button is disabled immediately on press and re-enabled only on reset.

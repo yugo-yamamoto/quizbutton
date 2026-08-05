@@ -1,7 +1,7 @@
 {
   "name": "quizbutton",
   "version": "1.0.0",
-  "description": "ブラウザで動く早押しクイズ用のボタンシステムです。 外部ライブラリ不要、Python 3.7 以上で動作します。",
+  "description": "ブラウザで動く早押しクイズ用のボタンシステムです。 外部ライブラリ不要、Python 3.9 以上で動作します。",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

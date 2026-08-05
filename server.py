@@ -68,6 +68,24 @@ def _wait_for_change(since_version: int, timeout: float = 29.0) -> dict:
 
 class QuizHandler(http.server.BaseHTTPRequestHandler):
 
+    # Keep-alive. Without it every poll costs a fresh TCP connection, and all
+    # clients reconnect at once after each state change — a SYN burst that
+    # overflows the listen backlog (see QuizServer below).
+    protocol_version = "HTTP/1.1"
+
+    # Required alongside keep-alive. _send_json() emits the header block and
+    # the body as two separate writes (wbufsize is 0, so each write is its own
+    # segment); with Nagle on, the second one waits for the peer to ACK the
+    # first, and the peer's delayed-ACK timer stalls every response by ~40 ms.
+    # HTTP/1.0 hid this because the immediate close pushed the data out.
+    disable_nagle_algorithm = True
+
+    # Keep-alive keeps the handler thread parked in readline() waiting for the
+    # next request. A client that vanishes without closing (phone leaving
+    # Wi-Fi) would otherwise leak that thread forever. Must stay above the
+    # 29 s long-poll cycle.
+    timeout = 65
+
     # ---- routing -----------------------------------------------------------
 
     def do_GET(self):
@@ -543,9 +561,17 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 # Entry point
 # ---------------------------------------------------------------------------
 
+class QuizServer(http.server.ThreadingHTTPServer):
+    # The stdlib default is 5. Every player opens a connection at roughly the
+    # same moment (page load, and again after each reset), so with more than a
+    # handful of players the excess SYNs are dropped and those clients stall
+    # ~1 s on the TCP SYN retransmit.
+    request_queue_size = 128
+
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    server = http.server.ThreadingHTTPServer(("", port), QuizHandler)
+    server = QuizServer(("", port), QuizHandler)
     print(f"Quiz buzzer running on http://localhost:{port}")
     print("Press Ctrl+C to stop.")
     try:

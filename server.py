@@ -313,60 +313,6 @@ HTML = r"""<!DOCTYPE html>
   #qr-box {
     background: #fff;
     border-radius: 1.25rem;
-    padding: 1.75rem 1.5rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    max-width: 90vw;
-  }
-  #qr-box p {
-    font-size: .78rem;
-    color: #475569;
-    word-break: break-all;
-    text-align: center;
-    max-width: 220px;
-  }
-  #qr-close {
-    font-size: .85rem;
-    color: #64748b;
-    cursor: pointer;
-    border: none;
-    background: none;
-    padding: .25rem .75rem;
-  }
-  #qr-close:hover { color: #1e293b; }
-
-  /* ---- QR button ---- */
-  #qr-btn {
-    position: fixed;
-    top: .6rem;
-    left: .75rem;
-    font-size: .75rem;
-    padding: .3rem .8rem;
-    border-radius: 9999px;
-    border: 1px solid #475569;
-    background: transparent;
-    color: #94a3b8;
-    cursor: pointer;
-    transition: background .15s, color .15s;
-  }
-  #qr-btn:hover { background: #1e293b; color: #e2e8f0; }
-
-  /* ---- QR modal ---- */
-  #qr-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.75);
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-  }
-  #qr-modal.open { display: flex; }
-  #qr-box {
-    background: #fff;
-    border-radius: 1.25rem;
     padding: 1.5rem 1.5rem 1rem;
     display: flex;
     flex-direction: column;
